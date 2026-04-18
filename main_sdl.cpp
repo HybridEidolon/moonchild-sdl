@@ -1,3 +1,6 @@
+#include <string>
+#include <utility>
+
 #define SDL_MAIN_USE_CALLBACKS 1
 #include <SDL3/SDL_main.h>
 #include <SDL3/SDL.h>
@@ -13,24 +16,7 @@
 #include "Classes/moonchild/PREFS.HPP"
 #include "Classes/moonchild/globals.hpp"
 
-// stub Caudio
-Caudio::Caudio(void) {}
-Caudio::~Caudio(void) {}
-void Caudio::reset_audio() {}
-void Caudio::checkVolume() {}
-UINT16 Caudio::play_cd(UINT16 tracknr) { return 0; }
-void Caudio::play_cd_cb(UINT16 tracknr) { }
-void Caudio::stop_cd() {}
-HSNDOBJ Caudio::create_sound(int SoundID, int nrof_simult) { return 0; }
-void Caudio::destroy_sound(HSNDOBJ sound) {}
-void Caudio::play_sound_1shot(HSNDOBJ sound, INT32 volume, INT32 pan) {}
-void Caudio::play_sound_loop (HSNDOBJ sound, INT32 volume, INT32 pan) {}
-void Caudio::stop_sound(HSNDOBJ sound) {}
-void Caudio::stop_cursound(HSNDOBJ sound) {}
-void Caudio::sound_volume(HSNDOBJ sound, INT32 volume) {}
-void Caudio::sound_pan(HSNDOBJ sound, INT32 pan) {}
-int	Caudio::get_dsound(void) { return 0; }
-void Caudio::dump(FILE* fd) {}
+#include "mcsdl/mixer.hpp"
 
 // stub Cmovie
 Cmovie::Cmovie(void) : videoFilename(nullptr), videoReady(false) {}
@@ -81,12 +67,20 @@ int g_SettingsFlg;
 
 // iOS port functions not declared elsewhere
 void ShowPicture(char *FileName) {}
+// this static is safe because the game is not multithreaded
+static std::string g_fullpath;
 char *FullPath( char *a_File ) {
   const char* resource_path = SDL_GetEnvironmentVariable(SDL_GetEnvironment(), "MOONCHILD_RESOURCES");
   if (resource_path) {
     return nullptr;
   }
-  return a_File;
+  std::string path = a_File;
+  // idk weird hack to reuse FullPath in the audio mixer for now
+  if (path.find("audio") != 0) {
+    path = "moonchild/" + path;
+  }
+  g_fullpath = std::move(path);
+  return (char*) g_fullpath.c_str();
 }
 char *FullWritablePath( char *a_File ) {
   return a_File;
@@ -141,6 +135,8 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char** argv) {
   }
   lvideo->on((unsigned char*) screen_surface->pixels, 640, 480, 256);
   SDL_UnlockSurface(screen_surface);
+
+  Mixer_Init();
 
   heartbeat = framework_InitGame(lvideo, new Caudio(), new Ctimer(), new Cmovie());
   if (!heartbeat) {
@@ -217,6 +213,7 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
 
 void SDL_AppQuit(void* appstate, SDL_AppResult result) {
   framework_ExitGame();
+  Mixer_Quit();
 
   if (renderer) SDL_DestroyRenderer(renderer);
   if (window) SDL_DestroyWindow(window);

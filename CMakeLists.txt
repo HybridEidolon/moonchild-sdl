@@ -22,6 +22,7 @@ target_include_directories(moonchild PRIVATE
 )
 target_sources(moonchild PRIVATE
   main_sdl.cpp
+  mcsdl/mixer.cpp
 
   # Classes/framewrk/audio.mm
   Classes/framewrk/Blitbuf.cpp
