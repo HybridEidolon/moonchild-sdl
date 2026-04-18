@@ -64,5 +64,15 @@ It historically used the mouse to scroll through the level. where you exit the e
 
 Enjoy!
 
+Original game code (and porting code)
 Reinier van Vliet
 www.proofofconcept.nl
+
+Graphics
+Metin Seven
+www.metinseven.nl
+
+Music & Soundfx
+Ramon Braumuller
+https://open.spotify.com/artist/6ljLO5A329ym1FARh4xAz4?si=I2-mmFi4Qq-CLNZvoku7Pw
+
