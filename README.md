@@ -1,14 +1,19 @@
-  Moon Child
+#  Moon Child
 iPhone version
 
 Original version (1997):
 PC - Windows 95 - DirectX 5
 
+### Running
+
+To run the game on your iPhone. Open the project file, compile, and run. You probably need to change your team and or create provisioning profiles. But thats normal for any iPhone project
+
+### Porting tips & tricks
 
 I could have released the original code but that is a lot less portable than this version.
 The original version uses DirectX for its graphics. I removed all of it and fixed it to use pixelbuffers everywhere.
-So each tile/sprite is a W*H*RGBA buffer. The game itself is 640*480*RGBA. So where GPU was used, I now just copy pixels over.
-That leaves us with a 640*480*4 pixelbuffer that needs to be drawn on the screen.
+So each tile/sprite is a W * H * RGBA buffer. The game itself is 640 * 480 * RGBA. So where GPU was used, I now just copy pixels over.
+That leaves us with a 640 * 480 * 4 pixelbuffer that needs to be drawn on the screen.
 In the iOS version I do this by creating a texture from the pixelbuffer. That texture I center on the screen. This opens the door for potential shader effects.
 
 Moon Child consists of 2 parts:
@@ -42,26 +47,27 @@ To quit from a level you need to send the 'Q' key:
 #define VK_ESCAPE 'Q'
 framework_EventHandle(FW_KEYDOWN,(int) VK_ESCAPE);
 
-----
+### Music
 
 The music historically was streamed from CD. On the mac is just plays an MP3 instead.
 
-----
+### Graphics
 
 All assets were combined in 1 big file 'called fastfile'. This dramaticaly speeded up loading assets.
 
 All graphics are in PCX format. Ancient fileformat which is very easy to load. 
 
------
+### Movies
+
 The iphone doesn't support the movies. Yes MC also has movies. But they were in an ancient proprietary format called 'smacker'. Anyhow, the code is still ion the game. It's one of the heartbeats. 
 
-----
+### Level editor
 
 Also fun, the game has a built in level editor. So that might be fun to open up. you can enable it by uncommenting this line in. mc.cpp: //#define EDITOR
 It historically used the mouse to scroll through the level. where you exit the editor it places mc so you can immediatly test. Left mouse buttons places tiles, and right mouse button goes to the tile selection screen.     judging by the code you probably need to feed: INT32 mousex = 10;  and INT32 mousey = 10; with the correct mouse coordinates.
 
 
-
+### Credits
 Enjoy!
 
 Original game code (and porting code)
