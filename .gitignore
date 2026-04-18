@@ -1,0 +1,5 @@
+/build
+/CMakeUserPresets.json
+
+# game save/prefs
+mc_opts.dat
