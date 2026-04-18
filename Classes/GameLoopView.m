@@ -75,7 +75,6 @@ enum {
 
 - (BOOL)resizeBuffers
 {
-    NSLog(@"resizeBuffers: fb=%u rb=%u context=%@", frameBufferHandle, colorBufferHandle, oglContext);
     [EAGLContext setCurrentContext:oglContext];
 
     glBindFramebuffer(GL_FRAMEBUFFER, frameBufferHandle);
@@ -89,8 +88,6 @@ enum {
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, colorBufferHandle);
 
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    NSLog(@"resizeBuffers: framebuffer=%u renderbuffer=%u size=%d x %d status=0x%04x",
-          frameBufferHandle, colorBufferHandle, renderBufferWidth, renderBufferHeight, status);
 
     return (status == GL_FRAMEBUFFER_COMPLETE);
 }
@@ -263,10 +260,6 @@ enum {
 
     GLint vp[4];
     glGetIntegerv(GL_VIEWPORT, vp);
-    NSLog(@"renderBuffer=%d x %d  frame=%zu x %zu  viewport=%d %d %d %d",
-          renderBufferWidth, renderBufferHeight,
-          frameWidth, frameHeight,
-          vp[0], vp[1], vp[2], vp[3]);
 
     static const GLfloat squareVertices[] = {
         -1.0f, -1.0f,
