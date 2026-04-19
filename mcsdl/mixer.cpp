@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -145,7 +146,7 @@ static std::array<float, 8192> mixbuffer;
 static void audio_callback(void* userdata, SDL_AudioStream* stream, int additional_amount, int total_amount) {
   int add_samples = additional_amount / (sizeof(float) * 2); // stereo f32
 #ifdef NEED_INTEL_DENORMAL_BIT
-  INT32 fpustate = 0
+  INT32 fpustate = 0;
   fpustate |= _MM_GET_FLUSH_ZERO_MODE() | _MM_FLUSH_ZERO_ON ? 1 : 0;
   fpustate |= _MM_GET_DENORMALS_ZERO_MODE() == _MM_DENORMALS_ZERO_ON ? 2 : 0;
 
@@ -200,7 +201,7 @@ static void audio_callback(void* userdata, SDL_AudioStream* stream, int addition
   SDL_PutAudioStreamData(stream, mixbuffer.data(), additional_amount);
 
 #ifdef NEED_INTEL_DENORMAL_BIT
-  if ((previous & 1) == 0) {
+  if ((fpustate & 1) == 0) {
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_OFF);
   }
   if ((fpustate & 2) == 0) {
