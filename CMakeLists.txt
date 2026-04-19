@@ -22,6 +22,7 @@ target_include_directories(moonchild PRIVATE
 )
 target_sources(moonchild PRIVATE
   main_sdl.cpp
+  mcsdl/minimp3.c
   mcsdl/mixer.cpp
 
   # Classes/framewrk/audio.mm

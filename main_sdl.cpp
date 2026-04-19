@@ -76,7 +76,7 @@ char *FullPath( char *a_File ) {
   }
   std::string path = a_File;
   // idk weird hack to reuse FullPath in the audio mixer for now
-  if (path.find("audio") != 0) {
+  if (path.find("audio") != 0 && path.find("mp3") != 0) {
     path = "moonchild/" + path;
   }
   g_fullpath = std::move(path);

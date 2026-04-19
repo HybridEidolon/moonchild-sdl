@@ -6,7 +6,21 @@
 #include <unordered_map>
 #include <vector>
 
+#ifdef _WIN32
+# include <Windows.h>
+#else
+# ifndef _LARGEFILE64_SOURCE
+#  define _LARGEFILE64_SOURCE
+# endif
+# include <sys/mman.h>
+# include <sys/types.h>
+# include <fcntl.h>
+# include <unistd.h>
+#endif
+
 #include <SDL3/SDL.h>
+
+#include "minimp3.h"
 
 #if defined(__x86_64__) || defined(_M_X64) || defined(i386) || defined(__i386__) || defined(__i386) || defined(_M_IX86)
 #include <immintrin.h>
@@ -135,13 +149,86 @@ struct SoundChannel {
 };
 };
 
+// memory mapped IO, for easy music reading
+namespace {
+struct memmapped {
+  void* data;
+  unsigned long long size;
+  bool valid;
+#ifdef _WIN32
+  HANDLE hfile;
+  HANDLE hmap;
+#else
+  int fd;
+#endif
+};
+}
+
+static memmapped map_file(const char* path) {
+  memmapped m {};
+
+#ifdef _WIN32
+  m.hfile = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+  if (m.hfile == INVALID_HANDLE_VALUE) {
+    return m;
+  }
+  LARGE_INTEGER filesize;
+  GetFileSizeEx(m.hfile, &filesize);
+  m.size = filesize.QuadPart;
+  m.hmap = CreateFileMappingA(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
+  if (m.hmap == INVALID_HANDLE_VALUE) {
+    CloseHandle(h.hfile);
+    h.hfile = INVALID_HANDLE_VALUE;
+    return m;
+  }
+  m.data = MapViewOfFile((*mmapped)->hMap, FILE_MAP_READ, 0, 0, 0);
+  m.valid = true;
+
+#else
+  int fd;
+  if ((fd = open(path, O_RDONLY)) == -1) {
+    return m;
+  }
+  off_t filesize = lseek(fd, 0, SEEK_END);
+  lseek(fd, 0, SEEK_SET);
+
+  m.data = mmap(nullptr, filesize, PROT_READ, MAP_PRIVATE, fd, 0);
+  m.fd = fd;
+  m.size = filesize;
+  m.valid = true;
+
+#endif
+
+  return m;
+}
+
+static void close_mapped_file(memmapped& m) {
+#ifdef _WIN32
+  UnmapViewOfFile(m.data);
+  CloseHandle(m.hmap);
+  CloseHandle(m.hfile);
+  m = {};
+#else
+  munmap(m.data, m.size);
+  close(m.fd);
+  m = {};
+#endif
+}
+
 static SDL_AudioStream* output_stream;
 
 static HSNDOBJ chunk_counter;
 static std::unordered_map<HSNDOBJ, SoundChunk> chunk_map;
 static std::array<SoundChannel, 64> sound_channels;
+static bool music_active;
+static mp3dec_t music_decoder;
+static memmapped music_file;
+static unsigned long long music_pos;
+static SDL_AudioStream *music_stream;
+static float music_gain;
 
 static std::array<float, 8192> mixbuffer;
+
 
 static void audio_callback(void* userdata, SDL_AudioStream* stream, int additional_amount, int total_amount) {
   int add_samples = additional_amount / (sizeof(float) * 2); // stereo f32
@@ -159,6 +246,11 @@ static void audio_callback(void* userdata, SDL_AudioStream* stream, int addition
 #endif
 
   mixbuffer = {};
+
+  // decode music stream
+  if (music_active) {
+    SDL_GetAudioStreamData(music_stream, mixbuffer.data(), add_samples * sizeof(float) * 2);
+  }
 
   // mix sounds
   for (auto& channel : sound_channels) {
@@ -194,6 +286,7 @@ static void audio_callback(void* userdata, SDL_AudioStream* stream, int addition
       }
     }
   }
+
   for (auto& s : mixbuffer) {
     s = SDL_clamp(s, -1, 1);
   }
@@ -211,11 +304,51 @@ static void audio_callback(void* userdata, SDL_AudioStream* stream, int addition
 
 }
 
+static void minimp3_callback(void* userdata, SDL_AudioStream* stream, int additional_amount, int total_amount) {
+  INT16 mp3pcm[MINIMP3_MAX_SAMPLES_PER_FRAME] {};
+  int samples = 0;
+  SDL_AudioSpec streamspec {};
+  SDL_GetAudioStreamFormat(stream, &streamspec, nullptr);
+  int add_samples = additional_amount / streamspec.channels / SDL_AUDIO_BYTESIZE(streamspec.format);
+  while (add_samples > 0) {
+    if (music_pos >= music_file.size) {
+      music_pos = 0;
+    }
+    mp3dec_frame_info_t info {};
+    samples = mp3dec_decode_frame(&music_decoder, ((const UINT8*)(music_file.data)) + music_pos, music_file.size - music_pos, mp3pcm, &info);
+    add_samples -= samples;
+
+    SDL_AudioSpec srcspec {};
+    srcspec.channels = info.channels;
+    srcspec.format = SDL_AUDIO_S16;
+    srcspec.freq = info.hz;
+    music_pos += info.frame_bytes;
+
+    SDL_AudioSpec dstspec {};
+    dstspec.channels = 2;
+    dstspec.format = SDL_AUDIO_F32;
+    dstspec.freq = 44100;
+
+    if (samples >= 0) {
+      SDL_SetAudioStreamFormat(stream, &srcspec, &dstspec);
+      SDL_PutAudioStreamData(stream, &mp3pcm, samples * 2 * info.channels);
+    } else if (samples == 0) {
+      if (info.frame_bytes == 0) {
+        music_pos = 0;
+      }
+    }
+  }
+}
+
 bool Mixer_Init() {
   chunk_map = {};
   sound_channels = {};
   mixbuffer = {};
   chunk_counter = 1;
+  music_active = false;
+  if (music_file.valid) {
+    close_mapped_file(music_file);
+  }
 
   SDL_InitSubSystem(SDL_INIT_AUDIO);
 
@@ -253,13 +386,83 @@ void Caudio::reset_audio() {
   sound_channels = {};
   mixbuffer = {};
   chunk_counter = 1;
+  music_active = false;
+  if (music_file.valid) {
+    close_mapped_file(music_file);
+  }
 
   SDL_UnlockAudioStream(output_stream);
 }
 void Caudio::checkVolume() {}
-UINT16 Caudio::play_cd(UINT16 tracknr) { return 0; }
-void Caudio::play_cd_cb(UINT16 tracknr) { }
-void Caudio::stop_cd() {}
+
+static const char* music_trackfiles[] = {
+  "",
+  "",
+  "title.mp3",
+  "world1.mp3",
+  "world2.mp3",
+  "world3.mp3",
+  "world4.mp3",
+  "gameover.mp3",
+};
+
+static float music_trackgains[] = {
+  1,
+  1,
+  .8f,
+  .5f,
+  .5f,
+  .5f,
+  .5f,
+  1
+};
+UINT16 Caudio::play_cd(UINT16 tracknr) {
+  if (tracknr < 2 || tracknr > 7) {
+    return 0;
+  }
+
+  SDL_LockAudioStream(output_stream);
+  if (music_file.valid) {
+    close_mapped_file(music_file);
+  }
+  std::string trackpath = std::string{"mp3/"} + music_trackfiles[tracknr];
+  music_file = map_file(FullPath((char*)trackpath.c_str()));
+  if (!music_file.valid) {
+    SDL_UnlockAudioStream(output_stream);
+    return 0;
+  }
+  music_gain = music_trackgains[tracknr];
+  music_pos = 0;
+  mp3dec_init(&music_decoder);
+  music_active = true;
+  SDL_AudioSpec srcspec {};
+  srcspec.channels = 2;
+  srcspec.format = SDL_AUDIO_S16;
+  srcspec.freq = 44100;
+  SDL_AudioSpec dstspec {};
+  dstspec.channels = 2;
+  dstspec.format = SDL_AUDIO_F32;
+  dstspec.freq = 44100;
+  music_stream = SDL_CreateAudioStream(&srcspec, &dstspec);
+  SDL_SetAudioStreamGetCallback(music_stream, minimp3_callback, nullptr);
+  SDL_SetAudioStreamGain(music_stream, music_gain);
+  SDL_UnlockAudioStream(output_stream);
+}
+void Caudio::play_cd_cb(UINT16 tracknr) {
+  play_cd(tracknr);
+}
+void Caudio::stop_cd() {
+  SDL_LockAudioStream(output_stream);
+  if (music_active) {
+    music_active = false;
+    if (music_file.valid) {
+      close_mapped_file(music_file);
+    }
+    SDL_DestroyAudioStream(music_stream);
+    music_stream = nullptr;
+  }
+  SDL_UnlockAudioStream(output_stream);
+}
 HSNDOBJ Caudio::create_sound(int SoundID, int nrof_simult) {
   SDL_AudioSpec spec {};
   Uint8* buf;
