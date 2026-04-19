@@ -150,6 +150,7 @@ int FastFileInit( char *fname, int max_handles )
 
         return false;
     }
+	memset(lpFH, 0, sizeof(FILEHANDLE) * max_handles);
     dwFHCnt = max_handles;
 
 
