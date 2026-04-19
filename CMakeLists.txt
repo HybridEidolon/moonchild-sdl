@@ -21,6 +21,7 @@ target_sources(moonchild PRIVATE
   mcsdl/minimp3.c
   mcsdl/mixer.cpp
   mcsdl/miniz.c
+  mcsdl/mmio.cpp
 
   # Classes/framewrk/audio.mm
   Classes/framewrk/Blitbuf.cpp
