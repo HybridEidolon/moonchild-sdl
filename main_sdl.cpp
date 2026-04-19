@@ -191,7 +191,7 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
   last_time_ns = SDL_GetTicksNS() - time_before;
   constexpr const Uint64 ns_per_frame = SDL_NS_PER_SECOND / 60;
   if (last_time_ns < ns_per_frame) {
-    // SDL_DelayPrecise(ns_per_frame - last_time_ns);
+    SDL_DelayPrecise(ns_per_frame - last_time_ns);
   }
 
   return SDL_APP_CONTINUE;
