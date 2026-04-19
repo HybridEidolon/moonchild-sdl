@@ -212,8 +212,9 @@ static void audio_callback(void* userdata, SDL_AudioStream* stream, int addition
       // mixbuffer is interleaved stereo
       float gain = calcVolume(channel.vol);
       float pan = calcPan(channel.pan);
-      float lpangain = std::cos((pan + 1.f) * M_PI_4);
-      float rpangain = std::sin((pan + 1.f) * M_PI_4);
+      constexpr const double kPi = 3.1415926535;
+      float lpangain = std::cos((pan + 1.f) * kPi / 4.0);
+      float rpangain = std::sin((pan + 1.f) * kPi / 4.0);
       mixbuffer[(mix_pos * 2)] += (chunk.data[channel.pos] * gain) * lpangain;
       mixbuffer[(mix_pos * 2) + 1] += (chunk.data[channel.pos] * gain) * rpangain;
       to_mix -= 1;

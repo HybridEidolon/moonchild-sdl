@@ -17,20 +17,20 @@ memmapped map_file(const char* path) {
   memmapped m {};
 
 #ifdef _WIN32
-  m.hfile = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+  m.hfile = (void*)CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
   if (m.hfile == INVALID_HANDLE_VALUE) {
     return m;
   }
   LARGE_INTEGER filesize;
-  GetFileSizeEx(m.hfile, &filesize);
+  GetFileSizeEx((HANDLE)m.hfile, &filesize);
   m.size = filesize.QuadPart;
-  m.hmap = CreateFileMappingA(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
-  if (m.hmap == INVALID_HANDLE_VALUE) {
-    CloseHandle(h.hfile);
-    h.hfile = INVALID_HANDLE_VALUE;
+  m.hmap = CreateFileMappingA((HANDLE)m.hfile, NULL, PAGE_READONLY, 0, 0, NULL);
+  if (m.hmap == (void*)INVALID_HANDLE_VALUE) {
+    CloseHandle((HANDLE)m.hfile);
+    m.hfile = (void*)INVALID_HANDLE_VALUE;
     return m;
   }
-  m.data = MapViewOfFile((*mmapped)->hMap, FILE_MAP_READ, 0, 0, 0);
+  m.data = MapViewOfFile(m.hmap, FILE_MAP_READ, 0, 0, 0);
   m.valid = true;
 
 #else

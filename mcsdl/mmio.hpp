@@ -1,17 +1,13 @@
 #ifndef MCSDL_MMIO_HPP
 #define MCSDL_MMIO_HPP
 
-#ifdef _WIN32
-#  include <cstdint>
-#endif
-
 struct memmapped {
   void* data;
   unsigned long long size;
   bool valid;
 #ifdef _WIN32
-  uintptr_t hfile;
-  uintptr_t hmap;
+  void* hfile;
+  void* hmap;
 #else
   int fd;
 #endif
