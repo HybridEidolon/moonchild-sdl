@@ -14,5 +14,7 @@ trim_trailing_whitespace = true
 indent_size = 2
 indent_style = space
 
-[*.mm]
+[Classes/**/*.{cpp,hpp,mm,h,c}]
+trim_trailing_whitespace = false
 indent_size = 4
+indent_style = tab
