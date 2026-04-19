@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -229,6 +230,21 @@ static float music_gain;
 
 static std::array<float, 8192> mixbuffer;
 
+static float calcVolume(INT32 volume)
+{
+    if(volume < -4000)volume = -4000;
+    if(volume > 0) volume = 0;
+    float gain = (volume+4000) / 4000.0f;
+    return gain;
+}
+
+static float calcPan(INT32 pan)
+{
+    if(pan < -1000)pan = -1000;
+    if(pan >= 1000) pan = 1000;
+    float panf = pan / 1000.0f;
+    return panf;
+}
 
 static void audio_callback(void* userdata, SDL_AudioStream* stream, int additional_amount, int total_amount) {
   int add_samples = additional_amount / (sizeof(float) * 2); // stereo f32
@@ -271,8 +287,12 @@ static void audio_callback(void* userdata, SDL_AudioStream* stream, int addition
     while (channel.active && channel.pos < chunk.length && to_mix > 0 && mix_pos < mixbuffer.size()) {
       // TODO panning, volume
       // mixbuffer is interleaved stereo
-      mixbuffer[(mix_pos * 2)] += chunk.data[channel.pos];
-      mixbuffer[(mix_pos * 2) + 1] += chunk.data[channel.pos];
+      float gain = calcVolume(channel.vol);
+      float pan = calcPan(channel.pan);
+      float lpangain = std::cos((pan + 1.f) * M_PI_4);
+      float rpangain = std::sin((pan + 1.f) * M_PI_4);
+      mixbuffer[(mix_pos * 2)] += (chunk.data[channel.pos] * gain) * lpangain;
+      mixbuffer[(mix_pos * 2) + 1] += (chunk.data[channel.pos] * gain) * rpangain;
       to_mix -= 1;
       mix_pos += 1;
       channel.pos += 1;
