@@ -116,6 +116,8 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char** argv) {
     return SDL_APP_FAILURE;
   }
 
+  SDL_HideCursor();
+
   Cvideo *lvideo = new Cvideo();
   screen_surface = SDL_CreateSurface(640, 480, SDL_PIXELFORMAT_ARGB8888);
   if (!screen_surface) {
