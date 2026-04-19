@@ -100,11 +100,11 @@ extern void framework_EventHandle(int event, int param);
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char** argv) {
   SDL_SetAppMetadata("Moon Child SDL", nullptr, "com.example.moonchildsdl");
 
-  if (!SDL_InitSubSystem(SDL_INIT_VIDEO)) {
+  if (!SDL_InitSubSystem(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD)) {
     return SDL_APP_FAILURE;
   }
 
-  if (!SDL_CreateWindowAndRenderer("Moon Child SDL", 640, 480, SDL_WINDOW_FULLSCREEN | SDL_WINDOW_RESIZABLE, &window, &renderer)) {
+  if (!SDL_CreateWindowAndRenderer("Moon Child SDL", 640, 480, SDL_WINDOW_RESIZABLE, &window, &renderer)) {
     return SDL_APP_FAILURE;
   }
 
@@ -224,6 +224,69 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
         default: break;
       }
     }; break;
+    case SDL_EVENT_GAMEPAD_BUTTON_DOWN: {
+      switch (event->gbutton.button) {
+        case SDL_GAMEPAD_BUTTON_SOUTH: { framework_EventHandle(FW_KEYDOWN, prefs->upkey); } break;
+        case SDL_GAMEPAD_BUTTON_WEST: { framework_EventHandle(FW_KEYDOWN, prefs->shootkey); } break;
+        case SDL_GAMEPAD_BUTTON_START: { framework_EventHandle(FW_KEYDOWN, prefs->shootkey); } break;
+        case SDL_GAMEPAD_BUTTON_DPAD_LEFT: { framework_EventHandle(FW_KEYDOWN, prefs->leftkey); } break;
+        case SDL_GAMEPAD_BUTTON_DPAD_RIGHT: { framework_EventHandle(FW_KEYDOWN, prefs->rightkey); } break;
+        case SDL_GAMEPAD_BUTTON_DPAD_UP: { framework_EventHandle(FW_KEYDOWN, prefs->upkey); } break;
+        case SDL_GAMEPAD_BUTTON_DPAD_DOWN: { framework_EventHandle(FW_KEYDOWN, prefs->downkey); } break;
+        default: break;
+      }
+    }; break;
+    case SDL_EVENT_GAMEPAD_BUTTON_UP: {
+      switch (event->gbutton.button) {
+        case SDL_GAMEPAD_BUTTON_SOUTH: { framework_EventHandle(FW_KEYUP, prefs->upkey); } break;
+        case SDL_GAMEPAD_BUTTON_WEST: { framework_EventHandle(FW_KEYUP, prefs->shootkey); } break;
+        case SDL_GAMEPAD_BUTTON_START: { framework_EventHandle(FW_KEYUP, prefs->shootkey); } break;
+        case SDL_GAMEPAD_BUTTON_DPAD_LEFT: { framework_EventHandle(FW_KEYUP, prefs->leftkey); } break;
+        case SDL_GAMEPAD_BUTTON_DPAD_RIGHT: { framework_EventHandle(FW_KEYUP, prefs->rightkey); } break;
+        case SDL_GAMEPAD_BUTTON_DPAD_UP: { framework_EventHandle(FW_KEYUP, prefs->upkey); } break;
+        case SDL_GAMEPAD_BUTTON_DPAD_DOWN: { framework_EventHandle(FW_KEYUP, prefs->downkey); } break;
+        default: break;
+      }
+    }; break;
+    case SDL_EVENT_GAMEPAD_AXIS_MOTION: {
+      static Sint16 oldx = 0;
+      static Sint16 oldy = 0;
+      switch (event->gaxis.axis) {
+        case SDL_GAMEPAD_AXIS_LEFTX: {
+          if (event->gaxis.value < -20000) {
+            framework_EventHandle(FW_KEYDOWN, prefs->leftkey);
+          } else if (oldx < -20000) {
+            framework_EventHandle(FW_KEYUP, prefs->leftkey);
+          }
+          if (event->gaxis.value > 20000) {
+            framework_EventHandle(FW_KEYDOWN, prefs->rightkey);
+          } else if (oldx > 20000) {
+            framework_EventHandle(FW_KEYUP, prefs->rightkey);
+          }
+          oldx = event->gaxis.value;
+        }; break;
+        case SDL_GAMEPAD_AXIS_LEFTY: {
+          if (event->gaxis.value < -20000) {
+            framework_EventHandle(FW_KEYDOWN, prefs->upkey);
+          } else if (oldy < -20000) {
+            framework_EventHandle(FW_KEYUP, prefs->upkey);
+          }
+          if (event->gaxis.value > 20000) {
+            framework_EventHandle(FW_KEYDOWN, prefs->downkey);
+          } else if (oldy > 20000) {
+            framework_EventHandle(FW_KEYUP, prefs->downkey);
+          }
+          oldy = event->gaxis.value;
+        }; break;
+        default: break;
+      }
+    }; break;
+    case SDL_EVENT_GAMEPAD_ADDED: {
+      SDL_Gamepad* gp = SDL_OpenGamepad(event->gdevice.which);
+      if (!gp) {
+        fprintf(stderr, "Failed to open gamepad %d: %s\n", event->gdevice.which, SDL_GetError());
+      }
+    }; break;
   }
   return SDL_APP_CONTINUE;
 }
@@ -234,5 +297,5 @@ void SDL_AppQuit(void* appstate, SDL_AppResult result) {
 
   if (renderer) SDL_DestroyRenderer(renderer);
   if (window) SDL_DestroyWindow(window);
-  SDL_QuitSubSystem(SDL_INIT_VIDEO);
+  SDL_QuitSubSystem(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD);
 }
