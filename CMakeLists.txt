@@ -6,15 +6,11 @@ project(
 )
 
 find_package(SDL3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3)
-find_package(ZLIB REQUIRED)
 
 add_executable(moonchild)
 
 target_compile_features(moonchild PRIVATE c_std_99)
-target_link_libraries(moonchild PRIVATE
-  SDL3::SDL3
-  ZLIB::ZLIB
-)
+target_link_libraries(moonchild PRIVATE SDL3::SDL3)
 
 target_include_directories(moonchild PRIVATE
   Classes/framewrk
@@ -24,6 +20,7 @@ target_sources(moonchild PRIVATE
   main_sdl.cpp
   mcsdl/minimp3.c
   mcsdl/mixer.cpp
+  mcsdl/miniz.c
 
   # Classes/framewrk/audio.mm
   Classes/framewrk/Blitbuf.cpp
