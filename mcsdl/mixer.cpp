@@ -271,8 +271,8 @@ static void audio_callback(void* userdata, SDL_AudioStream* stream, int addition
     while (channel.active && channel.pos < chunk.length && to_mix > 0 && mix_pos < mixbuffer.size()) {
       // TODO panning, volume
       // mixbuffer is interleaved stereo
-      mixbuffer[(mix_pos * 2)] += chunk.data[channel.pos] * 0.3f;
-      mixbuffer[(mix_pos * 2) + 1] += chunk.data[channel.pos] * 0.3f;
+      mixbuffer[(mix_pos * 2)] += chunk.data[channel.pos];
+      mixbuffer[(mix_pos * 2) + 1] += chunk.data[channel.pos];
       to_mix -= 1;
       mix_pos += 1;
       channel.pos += 1;

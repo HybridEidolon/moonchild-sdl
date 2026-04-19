@@ -104,7 +104,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char** argv) {
     return SDL_APP_FAILURE;
   }
 
-  if (!SDL_CreateWindowAndRenderer("Moon Child SDL", 640, 480, 0, &window, &renderer)) {
+  if (!SDL_CreateWindowAndRenderer("Moon Child SDL", 640, 480, SDL_WINDOW_FULLSCREEN | SDL_WINDOW_RESIZABLE, &window, &renderer)) {
     return SDL_APP_FAILURE;
   }
 
@@ -146,10 +146,13 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char** argv) {
   return SDL_APP_CONTINUE;
 }
 
+static Uint64 last_time_ns;
+
 SDL_AppResult SDL_AppIterate(void* appstate) {
   if (!heartbeat) {
     return SDL_APP_SUCCESS;
   }
+  Uint64 time_before = SDL_GetTicksNS();
   SDL_Rect rect {};
   rect.w = 640;
   rect.h = 480;
@@ -181,11 +184,19 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
   SDL_FlushRenderer(renderer);
   SDL_RenderPresent(renderer);
 
+  // frame limiter
+  last_time_ns = SDL_GetTicksNS() - time_before;
+  constexpr const Uint64 ns_per_frame = SDL_NS_PER_SECOND / 60;
+  if (last_time_ns < ns_per_frame) {
+    SDL_DelayPrecise(ns_per_frame - last_time_ns);
+  }
+
   return SDL_APP_CONTINUE;
 }
 
 SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
   switch (event->type) {
+    case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
     case SDL_EVENT_QUIT: { return SDL_APP_SUCCESS; } break;
     case SDL_EVENT_KEY_DOWN: {
       switch (event->key.scancode) {
@@ -194,6 +205,12 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
         case SDL_SCANCODE_LEFT: { framework_EventHandle(FW_KEYDOWN, prefs->leftkey); } break;
         case SDL_SCANCODE_RIGHT: { framework_EventHandle(FW_KEYDOWN, prefs->rightkey); } break;
         case SDL_SCANCODE_SPACE: { framework_EventHandle(FW_KEYDOWN, prefs->shootkey); } break;
+        case SDL_SCANCODE_RETURN: {
+          if (event->key.mod & SDL_KMOD_ALT) {
+            bool fs = (SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN) != 0;
+            SDL_SetWindowFullscreen(window, !fs);
+          }
+        };
         default: break;
       }
     }; break;
