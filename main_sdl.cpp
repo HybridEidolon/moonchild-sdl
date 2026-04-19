@@ -96,6 +96,7 @@ SDL_Texture *screen_texture;
 // incorrect declarations in mc.hpp
 extern HEARTBEAT_FN framework_InitGame(Cvideo *newvideo, Caudio *newaudio, Ctimer *newtimer, Cmovie *newmovie);
 extern void framework_EventHandle(int event, int param);
+extern HEARTBEAT_FN MC_prepentername(void);
 
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char** argv) {
   SDL_SetAppMetadata("Moon Child SDL", nullptr, "com.example.moonchildsdl");
@@ -190,7 +191,7 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
   last_time_ns = SDL_GetTicksNS() - time_before;
   constexpr const Uint64 ns_per_frame = SDL_NS_PER_SECOND / 60;
   if (last_time_ns < ns_per_frame) {
-    SDL_DelayPrecise(ns_per_frame - last_time_ns);
+    // SDL_DelayPrecise(ns_per_frame - last_time_ns);
   }
 
   return SDL_APP_CONTINUE;
@@ -213,6 +214,7 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
             SDL_SetWindowFullscreen(window, !fs);
           }
         };
+        case SDL_SCANCODE_ESCAPE: { framework_EventHandle(FW_KEYDOWN, VK_ESCAPE); } break;
         default: break;
       }
     }; break;
@@ -223,6 +225,7 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
         case SDL_SCANCODE_LEFT: { framework_EventHandle(FW_KEYUP, prefs->leftkey); } break;
         case SDL_SCANCODE_RIGHT: { framework_EventHandle(FW_KEYUP, prefs->rightkey); } break;
         case SDL_SCANCODE_SPACE: { framework_EventHandle(FW_KEYUP, prefs->shootkey); } break;
+        case SDL_SCANCODE_ESCAPE: { framework_EventHandle(FW_KEYUP, VK_ESCAPE); } break;
         default: break;
       }
     }; break;
@@ -235,6 +238,7 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
         case SDL_GAMEPAD_BUTTON_DPAD_RIGHT: { framework_EventHandle(FW_KEYDOWN, prefs->rightkey); } break;
         case SDL_GAMEPAD_BUTTON_DPAD_UP: { framework_EventHandle(FW_KEYDOWN, prefs->upkey); } break;
         case SDL_GAMEPAD_BUTTON_DPAD_DOWN: { framework_EventHandle(FW_KEYDOWN, prefs->downkey); } break;
+        case SDL_GAMEPAD_BUTTON_BACK: { framework_EventHandle(FW_KEYDOWN, VK_ESCAPE); } break;
         default: break;
       }
     }; break;
@@ -247,6 +251,7 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
         case SDL_GAMEPAD_BUTTON_DPAD_RIGHT: { framework_EventHandle(FW_KEYUP, prefs->rightkey); } break;
         case SDL_GAMEPAD_BUTTON_DPAD_UP: { framework_EventHandle(FW_KEYUP, prefs->upkey); } break;
         case SDL_GAMEPAD_BUTTON_DPAD_DOWN: { framework_EventHandle(FW_KEYUP, prefs->downkey); } break;
+        case SDL_GAMEPAD_BUTTON_BACK: { framework_EventHandle(FW_KEYUP, VK_ESCAPE); } break;
         default: break;
       }
     }; break;
@@ -288,6 +293,25 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
       if (!gp) {
         fprintf(stderr, "Failed to open gamepad %d: %s\n", event->gdevice.which, SDL_GetError());
       }
+    }; break;
+    case SDL_EVENT_MOUSE_BUTTON_DOWN: {
+      if (event->button.button == SDL_BUTTON_LEFT) {
+        framework_EventHandle(FW_LBUTTONDOWN, 0);
+      } else if (event->button.button == SDL_BUTTON_RIGHT) {
+        framework_EventHandle(FW_RBUTTONDOWN, 0);
+      }
+    }; break;
+    case SDL_EVENT_MOUSE_BUTTON_UP: {
+      if (event->button.button == SDL_BUTTON_LEFT) {
+        framework_EventHandle(FW_LBUTTONUP, 0);
+      } else if (event->button.button == SDL_BUTTON_RIGHT) {
+        framework_EventHandle(FW_RBUTTONUP, 0);
+      }
+    }; break;
+    case SDL_EVENT_MOUSE_MOTION: {
+      g_MouseXCurrent = event->motion.x;
+      g_MouseYCurrent = event->motion.y;
+      framework_EventHandle(FW_MOUSEMOVE, 0);
     }; break;
   }
   return SDL_APP_CONTINUE;
