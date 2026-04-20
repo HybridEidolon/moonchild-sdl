@@ -136,13 +136,13 @@ Enjoy!
 
 Original game code (and porting code)
 Reinier van Vliet
-https://www.proofofconcept.nl
+<https://www.proofofconcept.nl>
 
 Graphics
 Metin Seven
-https://www.metinseven.nl
+<https://www.metinseven.nl>
 
 Music & Soundfx
 Ramon Braumuller
-https://open.spotify.com/artist/6ljLO5A329ym1FARh4xAz4?si=I2-mmFi4Qq-CLNZvoku7Pw
+<https://open.spotify.com/artist/6ljLO5A329ym1FARh4xAz4?si=I2-mmFi4Qq-CLNZvoku7Pw>
 
