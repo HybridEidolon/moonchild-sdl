@@ -52,7 +52,8 @@ extern char *FullPath2( char *a_File );
 
 #define GZIP
 typedef unsigned char  Byte;
-#include "zlib.h"
+//#include "zlib.h"
+#include "../miniz.h"
 
 int Compare( LPFILEENTRY p1, LPFILEENTRY p2 );
 

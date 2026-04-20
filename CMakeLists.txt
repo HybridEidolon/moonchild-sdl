@@ -12,7 +12,6 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 find_package(SDL2 CONFIG REQUIRED)
 find_package(SDL2_mixer CONFIG REQUIRED)
-find_package(ZLIB REQUIRED)
 
 # All C/C++ sources under src/ (subfolders included). Re-runs CMake when files are added/removed.
 file(GLOB_RECURSE MOONCHILD_SOURCES CONFIGURE_DEPENDS
@@ -33,5 +32,4 @@ target_include_directories(moonchild_shell PRIVATE
 target_link_libraries(moonchild_shell PRIVATE
   SDL2::SDL2
   SDL2_mixer::SDL2_mixer
-  ZLIB::ZLIB
 )
