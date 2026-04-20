@@ -4430,14 +4430,14 @@ HEARTBEAT_FN MC_prepentername(void)
 
 #ifdef MOVIES
 
-//  if (startmovie("gameover.smk", "assets\\frmgamov.pcx") == 0)
-//  {
-//	return 0;
-//  }
+ if (startmovie("gameover.smk", "assets\\frmgamov.pcx") == 0)
+ {
+	return 0;
+ }
     
-    showdeadsequence=1;
-    audio->play_cd(7);
-    return (HEARTBEAT_FN) MC_deadsequence;
+    // showdeadsequence=1;
+    // audio->play_cd(7);
+    // return (HEARTBEAT_FN) MC_deadsequence;
 
   return (HEARTBEAT_FN) MC_playingmovie;
 #endif
@@ -6575,7 +6575,7 @@ void scrolltextline(void)
   INT16  srcx,srcy,destx,desty;
   char  *letpoint;
   UINT16 rot;
-/*
+
   if (rightkey)
     {
       lastchaindir = 1;
@@ -6617,7 +6617,11 @@ void scrolltextline(void)
     if (letscrollspd>0) letscrollspd = 0;
   }
     }
-*/    
+
+    if (shootkey == 1) {
+      hiscoreSelectLetter = 1;
+    }
+
     
     
     
@@ -6647,6 +6651,7 @@ void scrolltextline(void)
     {
         hiscoreSelectLetter = 1;
     }
+    
     
     hiscorePrevMouseState = g_MouseActualFlg;
     

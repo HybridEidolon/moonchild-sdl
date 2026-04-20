@@ -53,6 +53,12 @@ Smack *Cmovie::open(char *filename)
         this->videoReady = false;
         return (Smack *)1;
     }
+    if(strcmp(filename, (char *)"gameover.smk")==0)
+    {
+        this->videoFilename = "gameover.mp4";
+        this->videoReady = false;
+        return (Smack *)1;
+    }
     
     printf("Trying to play unknown moviefile!");
     
