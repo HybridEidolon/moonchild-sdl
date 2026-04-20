@@ -3,7 +3,7 @@
 # Then: cmake -S . -B build && cmake --build build
 
 cmake_minimum_required(VERSION 3.16)
-project(moonchild_shell LANGUAGES C CXX)
+project(moonchild LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -21,15 +21,15 @@ file(GLOB_RECURSE MOONCHILD_SOURCES CONFIGURE_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx"
 )
 
-add_executable(moonchild_shell ${MOONCHILD_SOURCES})
+add_executable(moonchild ${MOONCHILD_SOURCES})
 
-target_include_directories(moonchild_shell PRIVATE
+target_include_directories(moonchild PRIVATE
   "${CMAKE_CURRENT_SOURCE_DIR}/src"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/moonchild"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/framewrk"
 )
 
-target_link_libraries(moonchild_shell PRIVATE
+target_link_libraries(moonchild PRIVATE
   SDL2::SDL2
   SDL2_mixer::SDL2_mixer
 )
