@@ -1,0 +1,11 @@
+root = true
+
+[*.{c,cpp,h,hpp}]
+charset = utf-8
+indent_style = space
+indent_size = 2
+
+[{CMakeLists.txt,*.cmake}]
+charset = utf-8
+indent_style = space
+indent_size = 2
