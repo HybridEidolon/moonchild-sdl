@@ -10,15 +10,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
-if(APPLE)
-  list(APPEND CMAKE_PREFIX_PATH
-    "/opt/homebrew/opt/sdl2"
-    "/opt/homebrew/opt/sdl2_mixer"
-    "/usr/local/opt/sdl2"
-    "/usr/local/opt/sdl2_mixer"
-  )
-endif()
-
 find_package(SDL2 CONFIG REQUIRED)
 find_package(SDL2_mixer CONFIG REQUIRED)
 find_package(ZLIB REQUIRED)
@@ -43,13 +34,4 @@ target_link_libraries(moonchild_shell PRIVATE
   SDL2::SDL2
   SDL2_mixer::SDL2_mixer
   ZLIB::ZLIB
-)
-
-# Copy assets next to the executable so SDL_GetBasePath()/relative paths work when running from the build tree.
-add_custom_command(
-  TARGET moonchild_shell POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_directory
-    "${CMAKE_CURRENT_SOURCE_DIR}/assets"
-    "$<TARGET_FILE_DIR:moonchild_shell>/assets"
-  COMMENT "Copy assets next to moonchild_shell"
 )
