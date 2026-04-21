@@ -6311,7 +6311,7 @@ HEARTBEAT_FN MC_preptitlesequence(void)
 
   world = 5;     // play song 4!    (make it into titletrack (#4!))
   start_cd();
-  livesplit::SendPause();
+  livesplit::SendReset();
 
   if (rc == 1) return (HEARTBEAT_FN) MC_showentername;    // highscore entry
 
@@ -7398,8 +7398,6 @@ HEARTBEAT_FN MC_endsequence(void)
 	LOG("G\n");
   configure_level(world+1,level+1);
 
-  livesplit::SendReset();
-  livesplit::SendSplitConfig();
   livesplit::SendStart();
 
   return (HEARTBEAT_FN) MC_preppuzzleselect;

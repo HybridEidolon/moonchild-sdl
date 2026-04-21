@@ -7,7 +7,6 @@ namespace livesplit {
 
 void Init(const char* host, uint16_t port);
 bool Running();
-void SendSplitConfig();
 void SendStart();
 void SendSplit(uint32_t time);
 void SendPause();
