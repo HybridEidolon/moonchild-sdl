@@ -21,7 +21,7 @@ file(GLOB_RECURSE MOONCHILD_SOURCES CONFIGURE_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx"
 )
 
-add_executable(moonchild ${MOONCHILD_SOURCES})
+add_executable(moonchild WIN32 ${MOONCHILD_SOURCES})
 
 target_include_directories(moonchild PRIVATE
   "${CMAKE_CURRENT_SOURCE_DIR}/src"
